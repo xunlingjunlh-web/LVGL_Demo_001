@@ -7,6 +7,9 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "my_ui/ui_app.h"  // <--- 关键：引用同一套UI代码
+
+
 #define DISP_BUF_SIZE (128 * 1024)
 
 int main(void)
@@ -51,7 +54,8 @@ int main(void)
 
 
     /*Create a Demo*/
-    lv_demo_widgets();
+    /*lv_demo_widgets();*/
+    ui_init(); // <--- 只有这一行涉及到界面
 
     /*Handle LitlevGL tasks (tickless mode)*/
     while(1) {
