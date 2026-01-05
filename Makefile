@@ -18,10 +18,12 @@ MAINSRC = ./main.c
 include $(LVGL_DIR)/lvgl/lvgl.mk
 include $(LVGL_DIR)/lv_drivers/lv_drivers.mk
 
-# 【上次的修改】加入 my_ui 头文件路径
-CFLAGS += -I$(LVGL_DIR)/my_ui
+# 1. 递归查找 ui 目录及其子目录下所有的 .c 文件
+CSRCS += $(shell find $(LVGL_DIR)/ui -name "*.c")
 
-CSRCS +=$(LVGL_DIR)/mouse_cursor_icon.c 
+# 2. 添加 ui 目录到头文件路径
+# (SLS 生成的代码通常只需要 -Iui 即可，它内部引用子目录是相对路径)
+CFLAGS += -I$(LVGL_DIR)/ui
 # 【上次的修改】加入 my_ui 源文件
 CSRCS += $(wildcard $(LVGL_DIR)/my_ui/*.c)
 
