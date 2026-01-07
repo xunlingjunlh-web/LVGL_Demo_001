@@ -18,10 +18,12 @@ MAINSRC = ./main.c
 include $(LVGL_DIR)/lvgl/lvgl.mk
 include $(LVGL_DIR)/lv_drivers/lv_drivers.mk
 
-# 【上次的修改】加入 my_ui 头文件路径
-CFLAGS += -I$(LVGL_DIR)/my_ui
+# 1. 递归查找 ui 目录及其子目录下所有的 .c 文件
+CSRCS += $(shell find $(LVGL_DIR)/ui -name "*.c")
 
-CSRCS +=$(LVGL_DIR)/mouse_cursor_icon.c 
+# 2. 添加 ui 目录到头文件路径
+# (SLS 生成的代码通常只需要 -Iui 即可，它内部引用子目录是相对路径)
+CFLAGS += -I$(LVGL_DIR)/ui
 # 【上次的修改】加入 my_ui 源文件
 CSRCS += $(wildcard $(LVGL_DIR)/my_ui/*.c)
 
@@ -57,11 +59,20 @@ WIN_TEMP = /mnt/d/Linux/demo_bin
 WIN_SOURCE = D:\\Linux\\demo_bin
 
 deploy: $(BIN)
+	@echo "0. [Syncing] Ensuring binary is ready..."
+	@sync  # 1. 强制将编译好的文件写入磁盘
+
 	@echo "1. [Copying] Copying to Windows temp..."
 	@cp $(BIN) $(WIN_TEMP)
+	@sync  # 2. 再次强制同步，确保复制完成
+	@sleep 2  # 3. 【关键】强制等待2秒，给Windows文件系统一点反应时间
 
 	@echo "2. [Pushing] Pushing to board..."
+	# 杀掉旧进程
+	-@$(ADB) shell "killall -9 demo_run"
+	
+	# 推送
 	@$(ADB) push $(WIN_SOURCE) /userdata/demo_run
 
 	@echo "3. [Running] Granting permissions and Starting..."
-	@$(ADB) shell "chmod +x /userdata/demo_run && /userdata/demo_run"
+	@$(ADB) shell "chmod +x /userdata/demo_run && /userdata/demo_run &"
