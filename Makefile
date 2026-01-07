@@ -59,11 +59,20 @@ WIN_TEMP = /mnt/d/Linux/demo_bin
 WIN_SOURCE = D:\\Linux\\demo_bin
 
 deploy: $(BIN)
+	@echo "0. [Syncing] Ensuring binary is ready..."
+	@sync  # 1. 强制将编译好的文件写入磁盘
+
 	@echo "1. [Copying] Copying to Windows temp..."
 	@cp $(BIN) $(WIN_TEMP)
+	@sync  # 2. 再次强制同步，确保复制完成
+	@sleep 2  # 3. 【关键】强制等待2秒，给Windows文件系统一点反应时间
 
 	@echo "2. [Pushing] Pushing to board..."
+	# 杀掉旧进程
+	-@$(ADB) shell "killall -9 demo_run"
+	
+	# 推送
 	@$(ADB) push $(WIN_SOURCE) /userdata/demo_run
 
 	@echo "3. [Running] Granting permissions and Starting..."
-	@$(ADB) shell "chmod +x /userdata/demo_run && /userdata/demo_run"
+	@$(ADB) shell "chmod +x /userdata/demo_run && /userdata/demo_run &"
